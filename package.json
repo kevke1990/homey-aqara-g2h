@@ -1,0 +1,13 @@
+{
+  "name": "homey-aqara-g2h-camera",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Native Homey Aqara G2H RTSP camera app",
+  "scripts": {
+    "validate": "homey app validate",
+    "run": "homey app run"
+  },
+  "dependencies": {
+    "homey": "^3.0.0"
+  }
+}
