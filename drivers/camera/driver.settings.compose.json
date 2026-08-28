@@ -8,43 +8,11 @@
   {
     "id": "rtsp_url",
     "type": "text",
-    "label": { "en": "RTSP URL", "nl": "RTSP-URL" },
-    "hint": { "en": "Example: rtsp://user:password@192.168.1.10:8554/ch1", "nl": "Bijvoorbeeld: rtsp://user:wachtwoord@192.168.1.10:8554/ch1" }
-  },
-  {
-    "id": "aqara_region",
-    "type": "dropdown",
-    "label": { "en": "Aqara region", "nl": "Aqara-regio" },
-    "value": "eu",
-    "values": [
-      { "id": "eu", "label": { "en": "Europe", "nl": "Europa" } },
-      { "id": "us", "label": { "en": "United States", "nl": "Verenigde Staten" } },
-      { "id": "cn", "label": { "en": "China", "nl": "China" } },
-      { "id": "sg", "label": { "en": "Singapore", "nl": "Singapore" } }
-    ]
-  },
-  {
-    "id": "aqara_client_id",
-    "type": "text",
-    "label": { "en": "Aqara Client ID", "nl": "Aqara Client ID" },
-    "optional": true
-  },
-  {
-    "id": "aqara_client_secret",
-    "type": "password",
-    "label": { "en": "Aqara Client Secret", "nl": "Aqara Client Secret" },
-    "optional": true
-  },
-  {
-    "id": "aqara_access_token",
-    "type": "password",
-    "label": { "en": "Aqara Access Token", "nl": "Aqara Access Token" },
-    "optional": true
-  },
-  {
-    "id": "aqara_subject_id",
-    "type": "text",
-    "label": { "en": "Aqara Subject ID", "nl": "Aqara Subject ID" },
+    "label": { "en": "Local RTSP URL", "nl": "Lokale RTSP-URL" },
+    "hint": {
+      "en": "Optional. Example: rtsp://user:password@192.168.1.10:8554/ch1",
+      "nl": "Optioneel. Bijvoorbeeld: rtsp://user:wachtwoord@192.168.1.10:8554/ch1"
+    },
     "optional": true
   }
 ]
