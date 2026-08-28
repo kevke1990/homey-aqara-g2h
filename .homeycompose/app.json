@@ -11,9 +11,6 @@
     "en": "Aqara G2H Pro, G3 integration for Homey."
   },
   "category": ["security"],
-  "permissions": [
-    "homey:manager:api"
-  ],
   "author": {
     "name": "Jules",
     "email": "jules@example.com"
