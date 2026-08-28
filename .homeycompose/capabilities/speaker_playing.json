@@ -1,0 +1,9 @@
+{
+  "type": "boolean",
+  "title": {
+    "en": "Speaker playing"
+  },
+  "getable": true,
+  "setable": false,
+  "decimals": 0
+}

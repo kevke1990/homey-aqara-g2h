@@ -1,0 +1,15 @@
+{
+  "id": "motion_detected",
+  "title": {
+    "en": "Motion detected"
+  },
+  "tokens": [
+    {
+      "name": "snapshot",
+      "type": "image",
+      "title": {
+        "en": "Snapshot"
+      }
+    }
+  ]
+}

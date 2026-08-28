@@ -1,0 +1,17 @@
+{
+  "id": "com.aqara.cameras",
+  "sdk": 3,
+  "version": "1.0.0",
+  "compatibility": ">=8.0.0",
+  "name": {
+    "en": "Aqara Cameras",
+    "nl": "Aqara Camera's"
+  },
+  "description": {
+    "en": "Aqara G2H Pro, G3 integration for Homey."
+  },
+  "category": ["security"],
+  "permissions": [
+    "homey:manager:api"
+  ]
+}

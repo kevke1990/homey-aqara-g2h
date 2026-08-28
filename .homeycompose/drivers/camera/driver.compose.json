@@ -1,0 +1,36 @@
+{
+  "name": {
+    "en": "Aqara Camera"
+  },
+  "class": "camera",
+  "capabilities": [
+    "onoff",
+    "light_mode",
+    "speaker_playing",
+    "microphone"
+  ],
+  "capabilitiesOptions": {
+    "onoff": {
+      "title": {
+        "en": "Camera Status / Privacy"
+      }
+    }
+  },
+  "views": [
+    {
+      "id": "camera_view",
+      "title": {
+        "en": "Live Feed & Intercom",
+        "nl": "Live feed & Intercom"
+      }
+    }
+  ],
+  "pair": [
+    {
+      "id": "list_devices"
+    },
+    {
+      "id": "add_device"
+    }
+  ]
+}

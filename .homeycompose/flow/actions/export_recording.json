@@ -1,0 +1,15 @@
+{
+  "id": "export_recording",
+  "title": {
+    "en": "Export the latest recording"
+  },
+  "tokens": [
+    {
+      "name": "recording_url",
+      "type": "url",
+      "title": {
+        "en": "Recording URL"
+      }
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "type": "enum",
+  "title": {
+    "en": "Light mode"
+  },
+  "getable": true,
+  "setable": true,
+  "values": [
+    {
+      "id": "IR-nightvision",
+      "title": {
+        "en": "IR night vision"
+      }
+    },
+    {
+      "id": "Auto",
+      "title": {
+        "en": "Auto"
+      }
+    },
+    {
+      "id": "Off",
+      "title": {
+        "en": "Off"
+      }
+    }
+  ]
+}

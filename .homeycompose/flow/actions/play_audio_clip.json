@@ -1,0 +1,15 @@
+{
+  "id": "play_audio_clip",
+  "title": {
+    "en": "Play audio clip [[clip]]"
+  },
+  "args": [
+    {
+      "name": "clip",
+      "type": "text",
+      "title": {
+        "en": "Audio clip"
+      }
+    }
+  ]
+}
