@@ -34,18 +34,53 @@
   ],
   "pair": [
     {
+      "id": "login_oauth2",
+      "template": "login_oauth2",
+      "options": {
+        "title": {
+          "en": "Connect Aqara",
+          "nl": "Aqara koppelen"
+        },
+        "hint": {
+          "en": "Sign in with your Aqara account",
+          "nl": "Log in met je Aqara-account"
+        },
+        "button": {
+          "en": "Log in with Aqara",
+          "nl": "Inloggen met Aqara"
+        }
+      }
+    },
+    {
       "id": "list_devices",
       "template": "list_devices",
       "navigation": {
         "next": "add_devices"
-      },
-      "options": {
-        "singular": true
       }
     },
     {
       "id": "add_devices",
       "template": "add_devices"
+    }
+  ],
+  "repair": [
+    {
+      "id": "login_oauth2",
+      "template": "login_oauth2",
+      "options": {
+        "title": {
+          "en": "Reconnect Aqara",
+          "nl": "Aqara opnieuw koppelen"
+        },
+        "hint": {
+          "en": "Your Aqara authorization needs attention",
+          "nl": "Je Aqara-autorisatie moet opnieuw worden gekoppeld"
+        },
+        "button": {
+          "en": "Log in with Aqara",
+          "nl": "Inloggen met Aqara"
+        }
+      }
     }
   ]
 }
