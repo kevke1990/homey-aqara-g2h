@@ -16,10 +16,6 @@
       }
     }
   },
-  "images": {
-    "large": "/assets/images/large.png",
-    "small": "/assets/images/small.png"
-  },
   "views": [
     {
       "id": "camera_view",

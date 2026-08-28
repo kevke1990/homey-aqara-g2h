@@ -13,5 +13,9 @@
   "category": ["security"],
   "permissions": [
     "homey:manager:api"
-  ]
+  ],
+  "author": {
+    "name": "Jules",
+    "email": "jules@example.com"
+  }
 }
