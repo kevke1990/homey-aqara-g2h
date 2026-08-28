@@ -10,7 +10,7 @@
   "description": {
     "en": "Aqara camera integration with local streaming and cloud controls."
   },
-  "category": ["security"],
+  "category": "security",
   "brandColor": "#2F6BFF",
   "author": {
     "name": "Jules",
