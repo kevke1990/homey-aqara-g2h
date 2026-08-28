@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   validate:
-    name: Generate assets and validate Homey app
+    name: Generate assets, build and validate Homey app
     runs-on: ubuntu-latest
 
     steps:
@@ -119,11 +119,46 @@ jobs:
           rsvg-convert -w 500 -h 500 .ci-assets/driver-image.svg -o drivers/camera/assets/images/large.png
           rsvg-convert -w 1000 -h 1000 .ci-assets/driver-image.svg -o drivers/camera/assets/images/xlarge.png
 
+      - name: Validate source asset layout
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f assets/icon.svg
+          test -f drivers/camera/assets/icon.svg
+          test -f drivers/camera/driver.compose.json
+          test ! -d .homeycompose/drivers/camera/assets
+          test ! -f .homeycompose/drivers/camera/driver.compose.json
+          xmllint --noout assets/icon.svg
+          xmllint --noout drivers/camera/assets/icon.svg
+
+          node <<'NODE'
+          const fs = require('fs');
+          const driver = JSON.parse(fs.readFileSync('drivers/camera/driver.compose.json', 'utf8'));
+          const expected = {
+            small: '/drivers/camera/assets/images/small.png',
+            large: '/drivers/camera/assets/images/large.png',
+            xlarge: '/drivers/camera/assets/images/xlarge.png',
+          };
+          if (JSON.stringify(driver.images) !== JSON.stringify(expected)) {
+            console.error('Unexpected driver image paths:', driver.images);
+            process.exit(1);
+          }
+          const app = JSON.parse(fs.readFileSync('.homeycompose/app.json', 'utf8'));
+          const appExpected = {
+            small: '/assets/images/small.png',
+            large: '/assets/images/large.png',
+            xlarge: '/assets/images/xlarge.png',
+          };
+          if (JSON.stringify(app.images) !== JSON.stringify(appExpected)) {
+            console.error('Unexpected app image paths:', app.images);
+            process.exit(1);
+          }
+          NODE
+
       - name: Validate every required image
         shell: bash
         run: |
           set -euo pipefail
-
           required=(
             "assets/images/small.png:250x175"
             "assets/images/large.png:500x350"
@@ -142,16 +177,21 @@ jobs:
             test "$actual" = "$expected"
           done
 
-          test -s assets/icon.svg
-          test -s drivers/camera/assets/icon.svg
-          xmllint --noout assets/icon.svg
-          xmllint --noout drivers/camera/assets/icon.svg
+      - name: Install app dependencies
+        run: npm install --no-audit --no-fund
 
-      - name: Compose Homey manifest
-        run: homey app compose
+      - name: Build Homey app
+        run: homey app build
 
       - name: Validate Homey app at publish level
         run: homey app validate --level publish
+
+      - name: Synchronize generated manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s .homeybuild/app.json
+          cp .homeybuild/app.json app.json
 
       - name: Commit generated assets and manifest
         shell: bash
