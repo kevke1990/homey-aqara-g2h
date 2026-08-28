@@ -19,7 +19,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install ImageMagick
+      - name: Install image tools
         shell: bash
         run: |
           sudo apt-get update
@@ -45,11 +45,14 @@ jobs:
       - name: Generate PNG assets
         shell: bash
         run: |
-          rsvg-convert -w 250 -h 175 assets/images/camera-icon.svg -o assets/images/small.png
-          rsvg-convert -w 500 -h 350 assets/images/camera-icon.svg -o assets/images/large.png
+          # Homey camera driver image requirements:
+          # small = 75x75, large = 250x175
+          rsvg-convert -w 75 -h 75 assets/images/camera-icon.svg -o assets/images/small.png
+          rsvg-convert -w 250 -h 175 assets/images/camera-icon.svg -o assets/images/large.png
+
           identify assets/images/small.png assets/images/large.png
-          test "$(identify -format '%wx%h' assets/images/small.png)" = "250x175"
-          test "$(identify -format '%wx%h' assets/images/large.png)" = "500x350"
+          test "$(identify -format '%wx%h' assets/images/small.png)" = "75x75"
+          test "$(identify -format '%wx%h' assets/images/large.png)" = "250x175"
 
       - name: Commit generated assets
         shell: bash
@@ -61,5 +64,5 @@ jobs:
             echo "No image changes to commit."
             exit 0
           fi
-          git commit -m "fix: generate valid camera driver images"
+          git commit -m "fix: use Homey camera image dimensions"
           git push
