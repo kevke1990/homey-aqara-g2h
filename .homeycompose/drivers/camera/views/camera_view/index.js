@@ -1,51 +1,54 @@
 'use strict';
 
 const video = document.getElementById('video-player');
+const status = document.getElementById('status');
 const talkBtn = document.getElementById('talk-btn');
 
+function setStatus(message) {
+  if (status) status.textContent = message;
+}
+
 async function initStream() {
+  setStatus('Connecting to Aqara stream…');
   try {
     const streamUrl = await Homey.emit('get_stream_url');
+    if (!streamUrl) throw new Error('No stream URL returned');
 
-    if (Hls.isSupported()) {
-      const hls = new Hls();
+    if (window.Hls && Hls.isSupported()) {
+      const hls = new Hls({ enableWorker: true, lowLatencyMode: true });
       hls.loadSource(streamUrl);
       hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, function() {
-        video.play();
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        video.play().catch(() => {});
+        setStatus('Live');
       });
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = streamUrl;
-      video.addEventListener('loadedmetadata', function() {
-        video.play();
+      hls.on(Hls.Events.ERROR, (_, data) => {
+        if (data && data.fatal) setStatus('Stream error — check Aqara stream availability.');
       });
+      return;
     }
+
+    if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = streamUrl;
+      video.addEventListener('loadedmetadata', () => {
+        video.play().catch(() => {});
+        setStatus('Live');
+      }, { once: true });
+      return;
+    }
+
+    throw new Error('This stream requires HLS.js or native HLS support');
   } catch (error) {
-    console.error('Failed to init stream', error);
+    console.error('Failed to initialize Aqara stream', error);
+    setStatus(error.message || 'Unable to start stream');
   }
 }
 
-let mediaRecorder;
-
-talkBtn.addEventListener('mousedown', async () => {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaRecorder = new MediaRecorder(stream);
-    mediaRecorder.ondataavailable = async (e) => {
-      const arrayBuffer = await e.data.arrayBuffer();
-      await Homey.emit('send_audio_chunk', Array.from(new Uint8Array(arrayBuffer)));
-    };
-    mediaRecorder.start(100);
-  } catch (err) {
-    console.error('Microphone access denied', err);
-  }
-});
-
-talkBtn.addEventListener('mouseup', () => {
-  if (mediaRecorder && mediaRecorder.state === 'recording') {
-    mediaRecorder.stop();
-    mediaRecorder.stream.getTracks().forEach(track => track.stop());
-  }
+// Two-way audio is deliberately disabled here until the Aqara API exposes a
+// documented browser-compatible audio transport. This prevents a misleading
+// UI and avoids sending unsupported binary data to the cloud API.
+talkBtn.addEventListener('click', () => {
+  setStatus('Two-way audio is not available in this view yet.');
 });
 
 initStream();
