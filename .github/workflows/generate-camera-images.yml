@@ -1,0 +1,57 @@
+name: Generate camera images
+
+on:
+  push:
+    paths:
+      - '.github/workflows/generate-camera-images.yml'
+      - 'assets/images/camera-icon.svg'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate-images:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate source SVG
+        shell: bash
+        run: |
+          mkdir -p assets/images
+          cat > assets/images/camera-icon.svg <<'SVG'
+          <svg xmlns="http://www.w3.org/2000/svg" width="500" height="350" viewBox="0 0 500 350">
+            <rect width="500" height="350" rx="48" fill="#f4f6f8"/>
+            <rect x="86" y="104" width="328" height="170" rx="34" fill="#ffffff" stroke="#1f2937" stroke-width="12"/>
+            <path d="M145 104l30-42h150l30 42" fill="#ffffff" stroke="#1f2937" stroke-width="12" stroke-linejoin="round"/>
+            <circle cx="250" cy="189" r="67" fill="#e8edf2" stroke="#1f2937" stroke-width="12"/>
+            <circle cx="250" cy="189" r="39" fill="#ffffff" stroke="#1f2937" stroke-width="10"/>
+            <circle cx="250" cy="189" r="13" fill="#1f2937"/>
+            <circle cx="363" cy="134" r="11" fill="#1f2937"/>
+            <circle cx="250" cy="303" r="9" fill="#9ca3af"/>
+          </svg>
+          SVG
+
+      - name: Generate PNG assets
+        shell: bash
+        run: |
+          convert -background none assets/images/camera-icon.svg -resize 250x175! assets/images/small.png
+          convert -background none assets/images/camera-icon.svg -resize 500x350! assets/images/large.png
+          file assets/images/small.png assets/images/large.png
+
+      - name: Commit generated assets
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/images/small.png assets/images/large.png assets/images/camera-icon.svg
+          if git diff --cached --quiet; then
+            echo "No image changes to commit."
+            exit 0
+          fi
+          git commit -m "fix: generate valid camera driver images"
+          git push
