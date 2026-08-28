@@ -16,6 +16,7 @@ class AqaraCameraDevice extends Homey.Device {
       this._registerCapabilities();
       this._registerFlowCards();
       this._registerEvents();
+      this._registerViewEvents();
       this.initialized = true;
       await this.setAvailable().catch(() => {});
     } catch (error) {
@@ -24,9 +25,7 @@ class AqaraCameraDevice extends Homey.Device {
     }
   }
 
-  _getSetting(id) {
-    return this.getSetting(id) || '';
-  }
+  _getSetting(id) { return this.getSetting(id) || ''; }
 
   async _setupClient() {
     const clientId = this._getSetting('aqara_client_id');
@@ -48,7 +47,7 @@ class AqaraCameraDevice extends Homey.Device {
   async _setupCameraVideo() {
     const rtspUrl = this._getSetting('rtsp_url');
     if (!rtspUrl) {
-      this.log('No RTSP URL configured; camera video will remain unavailable until configured.');
+      this.log('No RTSP URL configured; native camera streaming will remain unavailable until configured.');
       return;
     }
 
@@ -95,28 +94,31 @@ class AqaraCameraDevice extends Homey.Device {
       try {
         const snapshot = await this.takeSnapshot();
         await this.homey.flow.getDeviceTriggerCard('motion_detected').trigger(this, { snapshot });
-      } catch (error) {
-        this.error('Motion trigger failed:', error);
-      }
+      } catch (error) { this.error('Motion trigger failed:', error); }
     });
 
     this.client.on('person_detected', async () => {
-      try {
-        await this.homey.flow.getDeviceTriggerCard('person_detected').trigger(this);
-      } catch (error) {
-        this.error('Person trigger failed:', error);
-      }
+      try { await this.homey.flow.getDeviceTriggerCard('person_detected').trigger(this); }
+      catch (error) { this.error('Person trigger failed:', error); }
     });
 
     this.client.on('sound_detected', async ({ decibel }) => {
-      try {
-        await this.homey.flow.getDeviceTriggerCard('sound_detected').trigger(this, { decibel: Number(decibel) || 0 });
-      } catch (error) {
-        this.error('Sound trigger failed:', error);
-      }
+      try { await this.homey.flow.getDeviceTriggerCard('sound_detected').trigger(this, { decibel: Number(decibel) || 0 }); }
+      catch (error) { this.error('Sound trigger failed:', error); }
     });
 
     this.client.connectWebsocket();
+  }
+
+  _registerViewEvents() {
+    this.registerViewEvent('camera_view', 'get_stream_url', async () => {
+      if (!this.client) throw new Error('Aqara Cloud is not configured');
+      const subjectId = this._getSetting('aqara_subject_id');
+      if (!subjectId) throw new Error('Aqara Subject ID is not configured');
+      const result = await this.client.getStreamUrl(subjectId);
+      if (!result || !result.url) throw new Error('Aqara did not return a stream URL');
+      return result.url;
+    });
   }
 
   async takeSnapshot() {
@@ -151,11 +153,8 @@ class AqaraCameraDevice extends Homey.Device {
     this.homey.flow.getActionCard('play_audio_clip').registerRunListener(async ({ clip }) => {
       if (!this.client) throw new Error('Aqara Cloud is not configured');
       await this.setCapabilityValue('speaker_playing', true).catch(() => {});
-      try {
-        await this.client.playAudioClip(this._getSetting('aqara_subject_id'), clip);
-      } finally {
-        await this.setCapabilityValue('speaker_playing', false).catch(() => {});
-      }
+      try { await this.client.playAudioClip(this._getSetting('aqara_subject_id'), clip); }
+      finally { await this.setCapabilityValue('speaker_playing', false).catch(() => {}); }
       return true;
     });
 
