@@ -14,9 +14,10 @@ class AqaraCameraDevice extends Homey.Device {
       await this._setupClient();
       await this._setupCameraVideo();
       this._registerCapabilities();
-      this._registerEvents();
       this._registerFlowCards();
+      this._registerEvents();
       this.initialized = true;
+      await this.setAvailable().catch(() => {});
     } catch (error) {
       this.error('Camera initialization failed:', error);
       await this.setUnavailable(`Configuration or connection error: ${error.message}`).catch(() => {});
@@ -126,7 +127,6 @@ class AqaraCameraDevice extends Homey.Device {
     try {
       const response = await this.client.request('query.cam.snapshot', { subjectId });
       if (!response || !response.url) return null;
-
       const image = await this.homey.images.createImage();
       image.setStream(async stream => {
         const result = await fetch(response.url);
@@ -150,7 +150,12 @@ class AqaraCameraDevice extends Homey.Device {
 
     this.homey.flow.getActionCard('play_audio_clip').registerRunListener(async ({ clip }) => {
       if (!this.client) throw new Error('Aqara Cloud is not configured');
-      await this.client.playAudioClip(this._getSetting('aqara_subject_id'), clip);
+      await this.setCapabilityValue('speaker_playing', true).catch(() => {});
+      try {
+        await this.client.playAudioClip(this._getSetting('aqara_subject_id'), clip);
+      } finally {
+        await this.setCapabilityValue('speaker_playing', false).catch(() => {});
+      }
       return true;
     });
 
@@ -164,14 +169,22 @@ class AqaraCameraDevice extends Homey.Device {
   async onSettings({ newSettings }) {
     const oldUrl = this._getSetting('rtsp_url');
     const newUrl = newSettings.rtsp_url || '';
+
     if (oldUrl !== newUrl) {
       if (this.video) await this.video.unregister().catch(() => {});
       this.video = null;
-      if (newUrl) {
-        this.video = await this.homey.videos.createVideoRTSP();
-        this.video.registerVideoUrlListener(async () => ({ url: newUrl }));
-        await this.setCameraVideo('live', newSettings.camera_name || 'Aqara Camera', this.video);
-      }
+      if (newUrl) await this._setupCameraVideo();
+    }
+
+    const cloudChanged = ['aqara_region', 'aqara_client_id', 'aqara_client_secret', 'aqara_access_token'].some(key =>
+      newSettings[key] !== undefined && newSettings[key] !== this._getSetting(key)
+    );
+
+    if (cloudChanged) {
+      if (this.client) this.client.destroy();
+      this.client = null;
+      await this._setupClient();
+      if (this.client) this._registerEvents();
     }
   }
 
