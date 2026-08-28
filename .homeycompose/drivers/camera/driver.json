@@ -28,13 +28,5 @@
         "nl": "Live feed & Intercom"
       }
     }
-  ],
-  "pair": [
-    {
-      "id": "list_devices"
-    },
-    {
-      "id": "add_device"
-    }
   ]
 }
