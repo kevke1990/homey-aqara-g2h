@@ -1,0 +1,15 @@
+{
+  "id": "set_privacy_mode",
+  "title": {
+    "en": "Set privacy mode to [[enabled]]"
+  },
+  "args": [
+    {
+      "name": "enabled",
+      "type": "boolean",
+      "title": {
+        "en": "Enabled"
+      }
+    }
+  ]
+}

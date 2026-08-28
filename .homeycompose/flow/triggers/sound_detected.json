@@ -1,0 +1,18 @@
+{
+  "id": "sound_detected",
+  "title": {
+    "en": "Sound detected"
+  },
+  "tokens": [
+    {
+      "name": "decibel",
+      "type": "number",
+      "title": {
+        "en": "Sound level"
+      },
+      "units": {
+        "en": "dB"
+      }
+    }
+  ]
+}

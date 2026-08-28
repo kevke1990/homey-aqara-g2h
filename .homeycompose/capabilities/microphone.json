@@ -1,0 +1,9 @@
+{
+  "type": "boolean",
+  "title": {
+    "en": "Microphone enabled"
+  },
+  "getable": true,
+  "setable": true,
+  "decimals": 0
+}

@@ -1,0 +1,13 @@
+{
+  "name": "com.aqara.cameras",
+  "version": "1.0.0",
+  "main": "app.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "eslint": "^9.39.5",
+    "homey": "^4.4.0",
+    "ws": "^8.18.0"
+  }
+}
