@@ -17,8 +17,8 @@
     }
   },
   "images": {
-    "large": "/assets/images/large.png",
-    "small": "/assets/images/small.png"
+    "large": "/drivers/camera/assets/images/large.jpg",
+    "small": "/drivers/camera/assets/images/small.jpg"
   },
   "views": [
     {

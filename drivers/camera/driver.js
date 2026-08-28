@@ -8,7 +8,10 @@ class AqaraCameraDriver extends Homey.Driver {
   }
 
   async onPair(session) {
+    this.log('Pairing session started');
+
     session.setHandler('list_devices', async () => {
+      this.log('Pairing list_devices called');
       // Setup mockup for OAuth2 based pair
       return [
         {
@@ -24,6 +27,15 @@ class AqaraCameraDriver extends Homey.Driver {
           }
         }
       ];
+    });
+
+    session.setHandler('add_device', async (data) => {
+      this.log('Pairing add_device called with data:', JSON.stringify(data));
+      return true;
+    });
+
+    session.setHandler('disconnect', async () => {
+      this.log('Pairing session disconnected');
     });
   }
 }
