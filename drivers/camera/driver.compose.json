@@ -5,8 +5,9 @@
   },
   "class": "camera",
   "images": {
-    "large": "/assets/images/large.png",
-    "small": "/assets/images/small.png"
+    "small": "/drivers/camera/assets/images/small.png",
+    "large": "/drivers/camera/assets/images/large.png",
+    "xlarge": "/drivers/camera/assets/images/xlarge.png"
   },
   "capabilities": [
     "onoff",
