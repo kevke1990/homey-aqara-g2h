@@ -4,6 +4,10 @@
     "nl": "Aqara Camera"
   },
   "class": "camera",
+  "images": {
+    "large": "/assets/images/large.png",
+    "small": "/assets/images/small.png"
+  },
   "capabilities": [
     "onoff",
     "light_mode",
@@ -31,8 +35,12 @@
     {
       "id": "list_devices",
       "template": "list_devices",
-      "navigation": { "next": "add_devices" },
-      "options": { "singular": true }
+      "navigation": {
+        "next": "add_devices"
+      },
+      "options": {
+        "singular": true
+      }
     },
     {
       "id": "add_devices",
