@@ -1,30 +1,27 @@
 'use strict';
 
 const Homey = require('homey');
+const crypto = require('crypto');
 
 class AqaraCameraDriver extends Homey.Driver {
   async onInit() {
-    this.log('AqaraCameraDriver has been initialized');
+    this.log('AqaraCameraDriver initialized');
   }
 
   async onPair(session) {
-    session.setHandler('list_devices', async () => {
-      // Setup mockup for OAuth2 based pair
-      return [
-        {
-          name: 'Aqara G3 Camera',
-          data: {
-            id: 'g3_12345'
-          },
-          store: {
-            clientId: 'YOUR_CLIENT_ID',
-            clientSecret: 'YOUR_CLIENT_SECRET',
-            accessToken: 'YOUR_ACCESS_TOKEN',
-            subjectId: 'lumi.camera.g3'
-          }
-        }
-      ];
-    });
+    session.setHandler('list_devices', async () => [{
+      name: 'Aqara Camera',
+      data: { id: `aqara-${crypto.randomUUID()}` },
+      settings: {
+        camera_name: 'Aqara Camera',
+        rtsp_url: '',
+        aqara_region: 'eu',
+        aqara_client_id: '',
+        aqara_client_secret: '',
+        aqara_access_token: '',
+        aqara_subject_id: '',
+      },
+    }]);
   }
 }
 
