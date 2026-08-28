@@ -1,6 +1,7 @@
-<!DOCTYPE html>
-<html>
-  <body>
-    <h1>Add Device</h1>
-  </body>
-</html>
+<script type="text/javascript">
+Homey.setTitle('Add Device');
+Homey.emit('add_device', {}, function (err, devices) {
+  if (err) return Homey.alert(err);
+  Homey.done();
+});
+</script>

@@ -1,6 +1,7 @@
-<!DOCTYPE html>
-<html>
-  <body>
-    <h1>List Devices</h1>
-  </body>
-</html>
+<script type="text/javascript">
+Homey.setTitle('List Devices');
+Homey.emit('list_devices', {}, function (err, devices) {
+  if (err) return Homey.alert(err);
+  Homey.showView('add_device');
+});
+</script>
