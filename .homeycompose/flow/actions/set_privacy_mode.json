@@ -1,21 +1,36 @@
 {
-  "id": "set_privacy_mode",
   "title": {
     "en": "Set privacy mode to [[enabled]]",
-    "nl": "Zet privacymodus op [[enabled]]"
+    "nl": "Stel privacymodus in op [[enabled]]"
   },
   "titleFormatted": {
     "en": "Set privacy mode to [[enabled]]",
-    "nl": "Zet privacymodus op [[enabled]]"
+    "nl": "Stel privacymodus in op [[enabled]]"
   },
   "args": [
     {
       "name": "enabled",
-      "type": "boolean",
+      "type": "dropdown",
       "title": {
         "en": "Enabled",
         "nl": "Ingeschakeld"
-      }
+      },
+      "values": [
+        {
+          "id": "true",
+          "title": {
+            "en": "Enabled",
+            "nl": "Ingeschakeld"
+          }
+        },
+        {
+          "id": "false",
+          "title": {
+            "en": "Disabled",
+            "nl": "Uitgeschakeld"
+          }
+        }
+      ]
     }
   ]
 }
