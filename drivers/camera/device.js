@@ -10,7 +10,7 @@ class AqaraCameraDevice extends Homey.Device {
     const { clientId, clientSecret, accessToken, subjectId } = this.getStore();
 
     this.client = new AqaraApiClient({ clientId, clientSecret, accessToken });
-
+    
     // Register custom capability listeners
     this.registerCapabilityListener('onoff', async (value) => {
       await this.client.setPrivacyMode(subjectId, !value);
@@ -46,8 +46,8 @@ class AqaraCameraDevice extends Homey.Device {
 
     this.client.connectWebsocket();
 
-
-
+    
+    
     this.registerViewEvent('camera_view', 'get_stream_url', async () => {
       const res = await this.client.getStreamUrl(this.getStore().subjectId);
       return res.url;
@@ -56,7 +56,7 @@ class AqaraCameraDevice extends Homey.Device {
     this.registerViewEvent('camera_view', 'send_audio_chunk', async (data) => {
       return true;
     });
-
+    
     this.registerFlowCards();
   }
 
