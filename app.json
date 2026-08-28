@@ -4,222 +4,45 @@
   "sdk": 3,
   "version": "1.0.0",
   "compatibility": ">=8.0.0",
-  "name": {
-    "en": "Aqara Cameras",
-    "nl": "Aqara Camera's"
-  },
-  "description": {
-    "en": "Aqara G2H Pro, G3 integration for Homey."
-  },
-  "category": [
-    "security"
-  ],
-  "permissions": [
-    "homey:manager:api"
-  ],
-  "author": {
-    "name": "Jules",
-    "email": "jules@example.com"
-  },
-  "images": {
-    "large": "/assets/images/large.png",
-    "small": "/assets/images/small.png"
-  },
+  "name": { "en": "Aqara Cameras", "nl": "Aqara Camera's" },
+  "description": { "en": "Aqara G2H Pro, G3 integration for Homey." },
+  "category": ["security"],
+  "permissions": ["homey:manager:api"],
+  "author": { "name": "Jules", "email": "jules@example.com" },
+  "images": { "large": "/assets/images/large.png", "small": "/assets/images/small.png" },
   "flow": {
     "triggers": [
-      {
-        "id": "motion_detected",
-        "title": {
-          "en": "Motion detected"
-        },
-        "tokens": [
-          {
-            "name": "snapshot",
-            "type": "image",
-            "title": {
-              "en": "Snapshot"
-            }
-          }
-        ]
-      },
-      {
-        "id": "person_detected",
-        "title": {
-          "en": "Person detected"
-        }
-      },
-      {
-        "id": "sound_detected",
-        "title": {
-          "en": "Sound detected"
-        },
-        "tokens": [
-          {
-            "name": "decibel",
-            "type": "number",
-            "title": {
-              "en": "Sound level"
-            },
-            "units": {
-              "en": "dB"
-            }
-          }
-        ]
-      }
+      { "id": "motion_detected", "title": { "en": "Motion detected" }, "tokens": [{ "name": "snapshot", "type": "image", "title": { "en": "Snapshot" } }] },
+      { "id": "person_detected", "title": { "en": "Person detected" } },
+      { "id": "sound_detected", "title": { "en": "Sound detected" }, "tokens": [{ "name": "decibel", "type": "number", "title": { "en": "Sound level" }, "units": { "en": "dB" } }] }
     ],
     "actions": [
-      {
-        "id": "export_recording",
-        "title": {
-          "en": "Export the latest recording"
-        },
-        "tokens": [
-          {
-            "name": "recording_url",
-            "type": "string",
-            "title": {
-              "en": "Recording URL"
-            }
-          }
-        ]
-      },
-      {
-        "id": "play_audio_clip",
-        "title": {
-          "en": "Play audio clip [[clip]]"
-        },
-        "titleFormatted": {
-          "en": "Play audio clip [[clip]]"
-        },
-        "args": [
-          {
-            "name": "clip",
-            "type": "text",
-            "title": {
-              "en": "Audio clip"
-            }
-          }
-        ]
-      },
-      {
-        "id": "set_privacy_mode",
-        "title": {
-          "en": "Set privacy mode to [[enabled]]"
-        },
-        "titleFormatted": {
-          "en": "Set privacy mode to [[enabled]]"
-        },
-        "args": [
-          {
-            "name": "enabled",
-            "type": "dropdown",
-            "title": {
-              "en": "Enabled"
-            },
-            "values": [
-              {
-                "id": "true",
-                "label": {
-                  "en": "True"
-                }
-              },
-              {
-                "id": "false",
-                "label": {
-                  "en": "False"
-                }
-              }
-            ]
-          }
-        ]
-      }
+      { "id": "export_recording", "title": { "en": "Export the latest recording" }, "tokens": [{ "name": "recording_url", "type": "string", "title": { "en": "Recording URL" } }] },
+      { "id": "play_audio_clip", "title": { "en": "Play audio clip [[clip]]" }, "titleFormatted": { "en": "Play audio clip [[clip]]" }, "args": [{ "name": "clip", "type": "text", "title": { "en": "Audio clip" } }] },
+      { "id": "set_privacy_mode", "title": { "en": "Set privacy mode to [[enabled]]" }, "titleFormatted": { "en": "Set privacy mode to [[enabled]]" }, "args": [{ "name": "enabled", "type": "boolean", "title": { "en": "Enabled" } }] }
     ]
   },
-  "drivers": [
-    {
-      "name": {
-        "en": "Aqara Camera"
-      },
-      "class": "camera",
-      "capabilities": [
-        "onoff",
-        "light_mode",
-        "speaker_playing",
-        "microphone"
-      ],
-      "capabilitiesOptions": {
-        "onoff": {
-          "title": {
-            "en": "Camera Status / Privacy"
-          }
-        }
-      },
-      "views": [
-        {
-          "id": "camera_view",
-          "title": {
-            "en": "Live Feed & Intercom",
-            "nl": "Live feed & Intercom"
-          }
-        }
-      ],
-      "pair": [
-        {
-          "id": "list_devices"
-        },
-        {
-          "id": "add_device"
-        }
-      ],
-      "id": "camera"
-    }
-  ],
+  "drivers": [{
+    "name": { "en": "Aqara Camera", "nl": "Aqara Camera" },
+    "class": "camera",
+    "capabilities": ["onoff", "light_mode", "speaker_playing", "microphone"],
+    "capabilitiesOptions": { "onoff": { "title": { "en": "Camera Status / Privacy", "nl": "Camera status / privacy" } } },
+    "settings": [
+      { "id": "camera_name", "type": "text", "label": { "en": "Camera name", "nl": "Cameranaam" }, "value": "Aqara Camera" },
+      { "id": "rtsp_url", "type": "text", "label": { "en": "RTSP URL", "nl": "RTSP-URL" } },
+      { "id": "aqara_region", "type": "dropdown", "label": { "en": "Aqara region", "nl": "Aqara-regio" }, "value": "eu", "values": [{ "id": "eu", "label": { "en": "Europe", "nl": "Europa" } }, { "id": "us", "label": { "en": "United States", "nl": "Verenigde Staten" } }, { "id": "cn", "label": { "en": "China", "nl": "China" } }, { "id": "sg", "label": { "en": "Singapore", "nl": "Singapore" } }] },
+      { "id": "aqara_client_id", "type": "text", "label": { "en": "Aqara Client ID", "nl": "Aqara Client ID" }, "optional": true },
+      { "id": "aqara_client_secret", "type": "password", "label": { "en": "Aqara Client Secret", "nl": "Aqara Client Secret" }, "optional": true },
+      { "id": "aqara_access_token", "type": "password", "label": { "en": "Aqara Access Token", "nl": "Aqara Access Token" }, "optional": true },
+      { "id": "aqara_subject_id", "type": "text", "label": { "en": "Aqara Subject ID", "nl": "Aqara Subject ID" }, "optional": true }
+    ],
+    "views": [{ "id": "camera_view", "title": { "en": "Live Feed & Intercom", "nl": "Live feed & Intercom" } }],
+    "pair": [{ "id": "list_devices", "template": "list_devices", "navigation": { "next": "add_devices" }, "options": { "singular": true } }, { "id": "add_devices", "template": "add_devices" }],
+    "id": "camera"
+  }],
   "capabilities": {
-    "light_mode": {
-      "type": "enum",
-      "title": {
-        "en": "Light mode"
-      },
-      "getable": true,
-      "setable": true,
-      "values": [
-        {
-          "id": "IR-nightvision",
-          "title": {
-            "en": "IR night vision"
-          }
-        },
-        {
-          "id": "Auto",
-          "title": {
-            "en": "Auto"
-          }
-        },
-        {
-          "id": "Off",
-          "title": {
-            "en": "Off"
-          }
-        }
-      ]
-    },
-    "microphone": {
-      "type": "boolean",
-      "title": {
-        "en": "Microphone enabled"
-      },
-      "getable": true,
-      "setable": true,
-      "decimals": 0
-    },
-    "speaker_playing": {
-      "type": "boolean",
-      "title": {
-        "en": "Speaker playing"
-      },
-      "getable": true,
-      "setable": false,
-      "decimals": 0
-    }
+    "light_mode": { "type": "enum", "title": { "en": "Light mode" }, "getable": true, "setable": true, "values": [{ "id": "IR-nightvision", "title": { "en": "IR night vision" } }, { "id": "Auto", "title": { "en": "Auto" } }, { "id": "Off", "title": { "en": "Off" } }] },
+    "microphone": { "type": "boolean", "title": { "en": "Microphone enabled" }, "getable": true, "setable": true },
+    "speaker_playing": { "type": "boolean", "title": { "en": "Speaker playing" }, "getable": true, "setable": false }
   }
 }
