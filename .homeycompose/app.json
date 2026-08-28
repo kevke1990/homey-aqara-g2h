@@ -8,15 +8,17 @@
     "nl": "Aqara Camera's"
   },
   "description": {
-    "en": "Aqara G2H Pro, G3 integration for Homey."
+    "en": "Aqara camera integration with local streaming and cloud controls."
   },
   "category": ["security"],
+  "brandColor": "#2F6BFF",
   "author": {
     "name": "Jules",
     "email": "jules@example.com"
   },
   "images": {
+    "small": "/assets/images/small.png",
     "large": "/assets/images/large.png",
-    "small": "/assets/images/small.png"
+    "xlarge": "/assets/images/xlarge.png"
   }
 }
