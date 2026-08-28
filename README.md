@@ -4,9 +4,9 @@ Homey Pro / Homey SDK v3 integration for Aqara IP cameras with native RTSP suppo
 
 ## Aqara login
 
-The app uses Aqara's official OAuth2 account authorization. You do **not** enter an Aqara username, password, access token or camera Subject ID into Homey. Homey opens the Aqara login page and the user authorizes access to the Aqara account. Aqara then returns an OAuth2 authorization code which Homey exchanges for an access token and refresh token. Aqara documents this OAuth2 flow and explicitly states that it allows third-party applications to access the user's devices without receiving the user's Aqara password. citeturn10search0
+The app uses Aqara's official OAuth2 account authorization. You do **not** enter an Aqara username, password, access token or camera Subject ID into Homey. Homey opens the Aqara login page and the user authorizes access to the Aqara account. Aqara then returns an OAuth2 authorization code which Homey exchanges for an access token and refresh token.
 
-The app then calls Aqara's `query.device.info` API and filters the account's devices to supported camera models. Aqara documents that this API can return all devices under the authorized user and includes the device ID, model and device name. citeturn9search0
+The app then calls Aqara's `query.device.info` API and filters the account's devices to supported camera models.
 
 ## One-time developer configuration
 
@@ -18,7 +18,7 @@ Create an application in the Aqara Developer Platform and obtain:
 - AppKey
 - Key ID
 
-The OAuth client uses AppID/AppKey for OAuth2. The Aqara Open API request signature additionally requires the Key ID and AppKey. Aqara documents these request headers and signature rules. citeturn4search0turn4search2
+The OAuth client uses AppID/AppKey for OAuth2. The Aqara Open API request signature additionally requires the Key ID and AppKey.
 
 Create a local `env.json` from `env.json.example`:
 
@@ -37,8 +37,6 @@ Register this OAuth redirect URI in the Aqara application:
 ```text
 https://callback.athom.com/oauth2/callback
 ```
-
-Homey's official OAuth2 helper uses this callback and the `login_oauth2` pairing template. citeturn6search0turn12search0
 
 ## Multiple cameras
 
@@ -68,8 +66,6 @@ Each camera becomes a separate Homey device
 ```
 
 The OAuth session is shared, so you authorize the Aqara account once. Each Homey camera stores its own Aqara device ID and can have its own local RTSP URL.
-
-Aqara currently documents the following camera models, including G2H, G2H Pro and G3 variants. citeturn11search0
 
 ## Local RTSP
 
@@ -121,7 +117,7 @@ The current discovery filter includes Aqara's documented camera models, includin
 - Doorbell G4 / G410
 - other camera models listed by Aqara's camera SDK
 
-The exact features available through the Aqara Open API remain model/resource dependent. Aqara notes that camera functionality must be determined by product/model support. citeturn11search0
+The exact features available through the Aqara Open API remain model/resource dependent.
 
 ## Requirements
 
