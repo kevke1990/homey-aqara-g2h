@@ -2,13 +2,10 @@ name: Homey CI - Assets & Publish Validation
 
 on:
   push:
-    paths:
-      - '.github/workflows/generate-camera-images.yml'
-      - '.homeycompose/**'
-      - 'drivers/**'
-      - 'assets/icon.svg'
-      - 'app.js'
-      - 'package.json'
+    paths-ignore:
+      - 'app.json'
+      - 'assets/images/**'
+      - 'drivers/camera/assets/images/**'
   workflow_dispatch:
 
 permissions:
