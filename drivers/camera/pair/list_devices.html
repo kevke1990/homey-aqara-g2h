@@ -1,7 +1,7 @@
 <script type="text/javascript">
-Homey.setTitle('List Devices');
+Homey.setTitle('Aqara Camera');
 Homey.emit('list_devices', {}, function (err, devices) {
   if (err) return Homey.alert(err);
-  Homey.showView('add_device');
+  Homey.addDevice(devices[0]);
 });
 </script>
