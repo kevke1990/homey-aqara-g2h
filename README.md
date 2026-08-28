@@ -1,141 +1,140 @@
-# Aqara G2H Camera for Homey Self-Hosted Server
+# Aqara Cameras for Homey
 
-Native Homey camera integration for an Aqara G2H that exposes an RTSP stream.
+Homey Pro / Homey SDK v3 integration for Aqara IP cameras with native RTSP support and Aqara Cloud OAuth2 account discovery.
 
-## Design
+## Aqara login
 
-This app intentionally uses Homey's native RTSP Video API:
+The app uses Aqara's official OAuth2 account authorization. You do **not** enter an Aqara username, password, access token or camera Subject ID into Homey. Homey opens the Aqara login page and the user authorizes access to the Aqara account. Aqara then returns an OAuth2 authorization code which Homey exchanges for an access token and refresh token. Aqara documents this OAuth2 flow and explicitly states that it allows third-party applications to access the user's devices without receiving the user's Aqara password. citeturn10search0
 
-Aqara G2H
--> RTSP
--> Homey `createVideoRTSP()`
--> Homey Self-Hosted Server WebRTC proxy
--> Homey frontend
+The app then calls Aqara's `query.device.info` API and filters the account's devices to supported camera models. Aqara documents that this API can return all devices under the authorized user and includes the device ID, model and device name. citeturn9search0
 
-There is deliberately no:
+## One-time developer configuration
 
-- Nest Hub
-- Google Home
-- Home Assistant
-- go2rtc
-- Scrypted
-- external RTSP server
-- HLS server
-- FFmpeg transcoding
-- external cloud service
+For a self-hosted/development build, Aqara still requires the application's developer credentials. These are **not the user's Aqara login credentials**.
 
-The goal is to keep the original camera audio intact and let Homey handle the frontend streaming path.
+Create an application in the Aqara Developer Platform and obtain:
+
+- AppID
+- AppKey
+- Key ID
+
+The OAuth client uses AppID/AppKey for OAuth2. The Aqara Open API request signature additionally requires the Key ID and AppKey. Aqara documents these request headers and signature rules. citeturn4search0turn4search2
+
+Create a local `env.json` from `env.json.example`:
+
+```json
+{
+  "CLIENT_ID": "YOUR_AQARA_APP_ID",
+  "CLIENT_SECRET": "YOUR_AQARA_APP_KEY",
+  "AQARA_KEY_ID": "YOUR_AQARA_KEY_ID"
+}
+```
+
+`env.json` is gitignored and must never be committed. After this one-time configuration, normal source updates only require `git pull`.
+
+Register this OAuth redirect URI in the Aqara application:
+
+```text
+https://callback.athom.com/oauth2/callback
+```
+
+Homey's official OAuth2 helper uses this callback and the `login_oauth2` pairing template. citeturn6search0turn12search0
+
+## Multiple cameras
+
+Yes. **Multiple Aqara cameras are supported.**
+
+Pairing works like this:
+
+```text
+Homey
+  ↓
+Log in with Aqara
+  ↓
+Aqara account authorization
+  ↓
+query.device.info
+  ↓
+┌──────────────────────────────┐
+│ Aqara Camera - Living Room   │
+│ Aqara Camera - Garden        │
+│ Aqara G2H Pro - Bedroom      │
+│ Aqara G3 - Office            │
+└──────────────────────────────┘
+  ↓
+Select one or more cameras
+  ↓
+Each camera becomes a separate Homey device
+```
+
+The OAuth session is shared, so you authorize the Aqara account once. Each Homey camera stores its own Aqara device ID and can have its own local RTSP URL.
+
+Aqara currently documents the following camera models, including G2H, G2H Pro and G3 variants. citeturn11search0
+
+## Local RTSP
+
+RTSP remains a per-camera setting because the local RTSP endpoint comes from the camera/RTSP firmware rather than Aqara OAuth.
+
+For example:
+
+```text
+rtsp://user:password@192.168.1.50:8554/ch1
+```
+
+The app uses Homey's native `createVideoRTSP()` path rather than transcoding RTSP to HLS.
+
+## Architecture
+
+```text
+Aqara account
+     │
+     │ OAuth2
+     ▼
+Homey OAuth2 session
+     │
+     ├── query.device.info ──► camera discovery
+     │
+     └── access/refresh token
+
+Each Homey camera
+     │
+     ├── Aqara device ID
+     ├── Aqara model
+     └── local RTSP URL
+             │
+             ▼
+       Homey createVideoRTSP()
+             │
+             ▼
+        Homey camera UI
+```
+
+## Supported camera models
+
+The current discovery filter includes Aqara's documented camera models, including:
+
+- G2H / G2H Pro
+- G3
+- E1
+- G100
+- G5 / G5 Pro
+- Doorbell G4 / G410
+- other camera models listed by Aqara's camera SDK
+
+The exact features available through the Aqara Open API remain model/resource dependent. Aqara notes that camera functionality must be determined by product/model support. citeturn11search0
 
 ## Requirements
 
-- Homey Self-Hosted Server 12.0+ (tested conceptually against current SDK; user target: SHS 13.4.1)
-- Aqara G2H with a working RTSP endpoint
-- Homey CLI on the development computer
-- Node.js 18+ recommended
-
-## Aqara G2H RTSP
-
-The G2H does not expose RTSP as a normal official Aqara feature on all firmware versions. This app assumes that RTSP is already working on the camera.
-
-A commonly used high-resolution path for modified G2H firmware is:
-
-`rtsp://CAMERA-IP/ch0_0.h264`
-
-A low-resolution path is commonly:
-
-`rtsp://CAMERA-IP/ch0_1.h264`
-
-Use the exact URL that already works in your environment.
-
-## Install for development
-
-Clone:
-
-```bash
-git clone https://github.com/YOUR-GITHUB-USERNAME/homey-aqara-g2h-camera.git
-cd homey-aqara-g2h-camera
-```
-
-Install Homey CLI if necessary:
-
-```bash
-npm install --global --no-optional homey
-```
-
-Log in:
-
-```bash
-homey login
-```
-
-Select your Homey Self-Hosted Server:
-
-```bash
-homey select
-```
-
-Then run:
-
-```bash
-homey app run
-```
-
-Choose **Aqara G2H** in Homey when adding a new device.
-
-Enter:
-
-- Camera name
-- RTSP URL
-
-Example:
-
-```text
-rtsp://192.168.1.50/ch0_0.h264
-```
-
-## Why RTSP instead of HLS?
-
-The previous architecture used:
-
-RTSP -> FFmpeg -> HLS -> Homey
-
-That can make video work while audio disappears, especially when the original camera audio is converted to AAC and then passed through Homey's WebRTC proxy.
-
-Homey's current SDK has a native `createVideoRTSP()` API. The app therefore avoids unnecessary transcoding and gives Homey's native video stack the original RTSP stream.
-
-Homey documents `createVideoRTSP()` and `registerVideoUrlListener()` for exactly this type of integration.
-
-## Important
-
-Keep `disableWebRTCProxy` at its default (`false`).
-
-Homey's SDK documents that when the WebRTC proxy is enabled, supported frontends can use Homey's proxy. Disabling it forces direct playback and prevents playback on web platforms or outside the local network.
-
-## Troubleshooting
-
-### Video works but no audio
-
-First test the exact RTSP URL with VLC or ffplay on the LAN.
-
-Then inspect the Homey app log after opening the camera. The app logs whenever Homey requests the RTSP URL.
-
-If VLC/ffplay has audio but Homey does not, the problem is in Homey's RTSP/WebRTC handling rather than the camera source.
-
-### No video
-
-Verify:
-
-1. Camera IP is correct.
-2. RTSP service is running.
-3. Port 554 is reachable.
-4. The RTSP path is correct.
-5. The Homey SHS container can reach the camera on the LAN.
+- Homey SDK v3
+- Node.js 18+ for development; current Homey versions use newer Node runtimes
+- Aqara camera with a working RTSP endpoint for local live video
+- Aqara Developer Platform application for OAuth2 credentials
 
 ## Security
 
-If the RTSP URL contains credentials, the credentials are stored in the Homey device settings. Do not commit your real RTSP URL containing a password to GitHub.
+The Aqara user password is never stored by this app. OAuth access and refresh tokens are managed by Homey's OAuth2 session system. The local `env.json` contains developer credentials and is excluded from Git.
 
-Prefer a dedicated local camera credential if the camera supports it.
+RTSP credentials, when present in the RTSP URL, are stored in the Homey device settings. Do not commit real RTSP URLs containing passwords.
 
 ## License
 
