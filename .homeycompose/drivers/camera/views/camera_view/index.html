@@ -3,15 +3,16 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Aqara Camera View</title>
+    <title>Aqara Camera</title>
     <link rel="stylesheet" href="index.css">
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
   </head>
   <body>
     <main>
-      <h1>Aqara Camera Live Feed</h1>
-      <video id="video-player" controls autoplay muted></video>
-      <button id="talk-btn" type="button">Hold to Talk</button>
+      <h1>Aqara Camera</h1>
+      <div id="status" role="status">Starting…</div>
+      <video id="video-player" controls autoplay playsinline></video>
+      <button id="talk-btn" type="button">Two-way audio</button>
     </main>
     <script src="index.js"></script>
   </body>
