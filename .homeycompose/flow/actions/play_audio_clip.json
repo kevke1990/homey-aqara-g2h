@@ -3,6 +3,9 @@
   "title": {
     "en": "Play audio clip [[clip]]"
   },
+  "titleFormatted": {
+    "en": "Play audio clip [[clip]]"
+  },
   "args": [
     {
       "name": "clip",

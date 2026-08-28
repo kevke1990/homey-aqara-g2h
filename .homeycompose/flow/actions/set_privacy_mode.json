@@ -3,13 +3,30 @@
   "title": {
     "en": "Set privacy mode to [[enabled]]"
   },
+  "titleFormatted": {
+    "en": "Set privacy mode to [[enabled]]"
+  },
   "args": [
     {
       "name": "enabled",
-      "type": "boolean",
+      "type": "dropdown",
       "title": {
         "en": "Enabled"
-      }
+      },
+      "values": [
+        {
+          "id": "true",
+          "label": {
+            "en": "True"
+          }
+        },
+        {
+          "id": "false",
+          "label": {
+            "en": "False"
+          }
+        }
+      ]
     }
   ]
 }

@@ -6,7 +6,7 @@
   "tokens": [
     {
       "name": "recording_url",
-      "type": "url",
+      "type": "string",
       "title": {
         "en": "Recording URL"
       }

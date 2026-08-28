@@ -13,5 +13,13 @@
   "category": ["security"],
   "permissions": [
     "homey:manager:api"
-  ]
+  ],
+  "author": {
+    "name": "Jules",
+    "email": "jules@example.com"
+  },
+  "images": {
+    "large": "/assets/images/large.png",
+    "small": "/assets/images/small.png"
+  }
 }
