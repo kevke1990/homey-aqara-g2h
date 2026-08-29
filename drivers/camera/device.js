@@ -114,12 +114,16 @@ class AqaraCameraDevice extends OAuth2Device {
   }
 
   async handleCameraEvent(type, payload = {}) {
-    const snapshot = payload.snapshot || await this.takeSnapshot();
     if (type === 'motion') {
+      const snapshot = payload.snapshot || await this.takeSnapshot();
       await this.homey.flow.getDeviceTriggerCard('motion_detected').trigger(this, { snapshot }).catch(() => {});
-    } else if (type === 'person') {
+      return;
+    }
+    if (type === 'person') {
       await this.homey.flow.getDeviceTriggerCard('person_detected').trigger(this, {}).catch(() => {});
-    } else if (type === 'sound') {
+      return;
+    }
+    if (type === 'sound') {
       await this.homey.flow.getDeviceTriggerCard('sound_detected').trigger(this, {
         decibel: Number(payload.decibel || 0),
       }).catch(() => {});
