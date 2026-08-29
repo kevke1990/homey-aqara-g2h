@@ -1,38 +1,51 @@
 # Aqara Cameras for Homey
 
-Homey Pro / Homey SDK v3 integration for Aqara IP cameras with native RTSP support and Aqara Cloud OAuth2 account discovery.
+Homey Pro / Homey SDK v3 integration for Aqara IP cameras with Aqara Cloud OAuth2 account discovery and local RTSP streaming.
+
+## Current architecture
+
+```text
+Aqara account
+     │ OAuth2
+     ▼
+Homey OAuth2 session
+     │
+     ├── device discovery ─────► multiple Aqara camera devices
+     │                              │
+     │                              ├── Aqara DID
+     │                              ├── model profile
+     │                              └── local RTSP URL
+     │
+     └── cloud camera controls
+
+Local RTSP
+     │
+     ▼
+Homey native camera video
+
+Optional companion recorder
+     │
+     ▼
+MediaMTX on NAS / Proxmox
+     ├── per-camera recording
+     ├── playback
+     ├── retention
+     └── optional rclone → Google Drive
+```
 
 ## Aqara login
 
-The app uses Aqara's official OAuth2 account authorization. You do **not** enter an Aqara username, password, access token or camera Subject ID into Homey. Homey opens the Aqara login page and the user authorizes access to the Aqara account. Aqara then returns an OAuth2 authorization code which Homey exchanges for an access token and refresh token.
+The app uses Aqara's official OAuth2 account authorization. The user's Aqara password, access token and camera Subject ID are not entered into device settings. Homey opens the Aqara authorization page and receives OAuth2 tokens through the configured Aqara developer application.
 
-The app then calls Aqara's `query.device.info` API and filters the account's devices to supported camera models.
-
-## One-time developer configuration
-
-For a self-hosted/development build, Aqara still requires the application's developer credentials. These are **not the user's Aqara login credentials**.
-
-Create an application in the Aqara Developer Platform and obtain:
+A one-time developer setup is still required for a development/self-hosted build:
 
 - AppID
 - AppKey
 - Key ID
 
-The OAuth client uses AppID/AppKey for OAuth2. The Aqara Open API request signature additionally requires the Key ID and AppKey.
+Create `env.json` from `env.json.example`. It is gitignored and must never be committed.
 
-Create a local `env.json` from `env.json.example`:
-
-```json
-{
-  "CLIENT_ID": "YOUR_AQARA_APP_ID",
-  "CLIENT_SECRET": "YOUR_AQARA_APP_KEY",
-  "AQARA_KEY_ID": "YOUR_AQARA_KEY_ID"
-}
-```
-
-`env.json` is gitignored and must never be committed. After this one-time configuration, normal source updates only require `git pull`.
-
-Register this OAuth redirect URI in the Aqara application:
+Register the OAuth callback required by the Aqara application:
 
 ```text
 https://callback.athom.com/oauth2/callback
@@ -40,97 +53,83 @@ https://callback.athom.com/oauth2/callback
 
 ## Multiple cameras
 
-Yes. **Multiple Aqara cameras are supported.**
+**Multiple cameras are a core requirement.** The pairing list does not use `singular: true`. Each selected Aqara camera is represented by its own Homey device and uses its Aqara DID as the stable device identity.
 
-Pairing works like this:
+Example:
 
 ```text
-Homey
-  ↓
-Log in with Aqara
-  ↓
-Aqara account authorization
-  ↓
-query.device.info
-  ↓
-┌──────────────────────────────┐
-│ Aqara Camera - Living Room   │
-│ Aqara Camera - Garden        │
-│ Aqara G2H Pro - Bedroom      │
-│ Aqara G3 - Office            │
-└──────────────────────────────┘
-  ↓
-Select one or more cameras
-  ↓
-Each camera becomes a separate Homey device
+Aqara account
+  ├── G2H Pro — Living Room
+  ├── G2H Pro — Bedroom
+  ├── G3 — Office
+  └── G2H — Garden
 ```
 
-The OAuth session is shared, so you authorize the Aqara account once. Each Homey camera stores its own Aqara device ID and can have its own local RTSP URL.
+Each device can have its own RTSP endpoint and its own recording/storage policy in the future. A failure in one camera must not affect the others.
+
+Homey's `list_devices` system view intentionally supports selecting multiple devices when `singular` is omitted.
 
 ## Local RTSP
 
-RTSP remains a per-camera setting because the local RTSP endpoint comes from the camera/RTSP firmware rather than Aqara OAuth.
+RTSP is a per-camera setting because local RTSP is provided by the camera/firmware or an RTSP/ONVIF modification, not by Aqara OAuth.
 
-For example:
+Example:
 
 ```text
 rtsp://user:password@192.168.1.50:8554/ch1
 ```
 
-The app uses Homey's native `createVideoRTSP()` path rather than transcoding RTSP to HLS.
+The Homey camera uses the native `createVideoRTSP()` path. No video transcoding is performed inside Homey.
 
-## Architecture
+## Recording to NAS / Google Drive
+
+The Homey app is intentionally **not** a 24/7 NVR. Continuous video recording is better handled by a NAS/Proxmox/Docker host.
+
+The repository now contains a `recorder/` companion-service design using MediaMTX:
 
 ```text
-Aqara account
-     │
-     │ OAuth2
-     ▼
-Homey OAuth2 session
-     │
-     ├── query.device.info ──► camera discovery
-     │
-     └── access/refresh token
-
-Each Homey camera
-     │
-     ├── Aqara device ID
-     ├── Aqara model
-     └── local RTSP URL
-             │
-             ▼
-       Homey createVideoRTSP()
-             │
-             ▼
-        Homey camera UI
+Aqara RTSP cameras
+       │
+       ▼
+MediaMTX
+       │
+       ├── NAS/local recordings
+       │
+       └── optional rclone → Google Drive
 ```
 
-## Supported camera models
+MediaMTX supports multiple RTSP sources, fragmented MP4 recording, configurable retention and a playback HTTP API. The recorder configuration is per camera, so multiple cameras remain independent.
 
-The current discovery filter includes Aqara's documented camera models, including:
+See [`recorder/README.md`](recorder/README.md).
 
-- G2H / G2H Pro
-- G3
-- E1
-- G100
-- G5 / G5 Pro
-- Doorbell G4 / G410
-- other camera models listed by Aqara's camera SDK
+## Development status
 
-The exact features available through the Aqara Open API remain model/resource dependent.
+See [`docs/ROADMAP.md`](docs/ROADMAP.md) and the dated status report in `docs/STATUS-2026-08-30.md`.
 
 ## Requirements
 
 - Homey SDK v3
-- Node.js 18+ for development; current Homey versions use newer Node runtimes
-- Aqara camera with a working RTSP endpoint for local live video
-- Aqara Developer Platform application for OAuth2 credentials
+- Node.js 18+ for development
+- Aqara camera with a working local RTSP endpoint for local video
+- Aqara Developer Platform application for OAuth2 developer credentials
 
 ## Security
 
-The Aqara user password is never stored by this app. OAuth access and refresh tokens are managed by Homey's OAuth2 session system. The local `env.json` contains developer credentials and is excluded from Git.
+- Aqara user passwords are never stored by this app.
+- `env.json` is gitignored.
+- RTSP URLs may contain credentials; never commit real RTSP URLs with passwords.
+- Logging must not contain OAuth tokens, AppKeys, Key IDs or RTSP passwords.
 
-RTSP credentials, when present in the RTSP URL, are stored in the Homey device settings. Do not commit real RTSP URLs containing passwords.
+## Testing
+
+Run the unit tests with:
+
+```bash
+npm install
+npm test
+```
+
+The GitHub Actions test workflow runs the same unit tests on every push and pull request.
 
 ## License
 
