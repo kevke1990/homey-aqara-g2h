@@ -6,6 +6,21 @@ const { isSupportedCamera, getCameraModel } = require('../../lib/aqara/camera-mo
 class AqaraCameraDriver extends OAuth2Driver {
   async onOAuth2Init() {
     this.log('AqaraCameraDriver initialized');
+    this._registerFlowCards();
+  }
+
+  _registerFlowCards() {
+    this.homey.flow.getActionCard('set_privacy_mode').registerRunListener(async ({ device, enabled }) => {
+      return device.setPrivacyMode(enabled === true || enabled === 'true');
+    });
+
+    this.homey.flow.getActionCard('play_audio_clip').registerRunListener(async ({ device, clip }) => {
+      return device.playAudioClip(clip);
+    });
+
+    this.homey.flow.getActionCard('export_recording').registerRunListener(async ({ device }) => {
+      return device.exportRecording();
+    });
   }
 
   async onPairListDevices({ oAuth2Client }) {
