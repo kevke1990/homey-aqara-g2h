@@ -1,0 +1,32 @@
+# Copy to mediamtx.yml on the recorder host and replace the RTSP URLs.
+# Keep credentials out of Git.
+
+logLevel: info
+
+rtsp: true
+rtspAddress: :8554
+
+api: true
+apiAddress: :9997
+
+playback: true
+playbackAddress: :9996
+
+pathDefaults:
+  record: true
+  recordPath: /recordings/%path/%Y-%m-%d_%H-%M-%S-%f
+  recordFormat: fmp4
+  recordPartDuration: 1s
+  recordMaxPartSize: 50M
+  recordSegmentDuration: 10m
+  recordDeleteAfter: 7d
+
+paths:
+  woonkamer:
+    source: rtsp://USER:PASSWORD@CAMERA_IP:8554/ch1
+
+  slaapkamer:
+    source: rtsp://USER:PASSWORD@CAMERA_IP:8554/ch1
+
+  buiten:
+    source: rtsp://USER:PASSWORD@CAMERA_IP:8554/ch1
