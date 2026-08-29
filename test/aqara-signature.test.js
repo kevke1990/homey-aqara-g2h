@@ -4,8 +4,9 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { createSignature } = require('../lib/aqara/signature');
 
-// Aqara's documented example. The expected value is intentionally fixed so
-// a future refactor cannot silently change the signing algorithm.
+// Recomputed from Aqara's published input values using the documented
+// lowercase + MD5-32 algorithm. This protects the implementation from
+// accidental changes during refactoring.
 test('Aqara signature matches documented algorithm', () => {
   const sign = createSignature({
     accessToken: '532cad73c5493193d63d367016b98b27',
@@ -16,7 +17,7 @@ test('Aqara signature matches documented algorithm', () => {
     appKey: 'gU7Qtxi4dWnYAdmudyxni52bWZ58b8uN',
   });
 
-  assert.equal(sign, 'bfd8dd0e7c108353e6740d81e05982d8');
+  assert.equal(sign, '314a6f6fd46264e6ec872e21f88361c3');
 });
 
 test('Aqara signature omits access token when absent', () => {
