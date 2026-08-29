@@ -11,6 +11,7 @@ class AqaraCameraDevice extends OAuth2Device {
     try {
       await this._setupCameraVideo();
       this._registerCapabilities();
+      this._registerViewEvents();
       this.initialized = true;
       await this.setAvailable();
       this._startHealthTimer();
@@ -103,8 +104,6 @@ class AqaraCameraDevice extends OAuth2Device {
   }
 
   async _checkHealth() {
-    // Keep health checks deliberately lightweight. The RTSP endpoint is local
-    // and Aqara device discovery is cloud-based; do not poll the API every few seconds.
     if (!this.oAuth2Client) return;
     try {
       await this.oAuth2Client.getDevices({ pageNum: 1, pageSize: 1 });
@@ -127,7 +126,7 @@ class AqaraCameraDevice extends OAuth2Device {
     }
   }
 
-  async _registerViewEvents() {
+  _registerViewEvents() {
     this.registerViewEvent('camera_view', 'get_stream_url', async () => {
       const result = await this.oAuth2Client.requestIntent('query.cam.stream.url', {
         subjectId: this._getSubjectId(),
