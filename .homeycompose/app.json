@@ -3,6 +3,7 @@
   "sdk": 3,
   "version": "1.1.0",
   "compatibility": ">=8.0.0",
+  "platforms": ["local"],
   "name": {
     "en": "Aqara Cameras",
     "nl": "Aqara Camera's"
@@ -21,5 +22,11 @@
     "small": "/assets/images/small.png",
     "large": "/assets/images/large.png",
     "xlarge": "/assets/images/xlarge.png"
+  },
+  "api": {
+    "configure": {
+      "method": "POST",
+      "path": "/configure"
+    }
   }
 }
