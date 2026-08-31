@@ -33,23 +33,46 @@ MediaMTX on NAS / Proxmox
      └── optional rclone → Google Drive
 ```
 
-## Aqara login
+## Aqara developer configuration
 
-The app uses Aqara's official OAuth2 account authorization. The user's Aqara password, access token and camera Subject ID are not entered into device settings. Homey opens the Aqara authorization page and receives OAuth2 tokens through the configured Aqara developer application.
+The Aqara developer credentials are configured **inside the Homey app**. They are not committed to GitHub and are no longer required in `env.json` for a normal Homey installation.
 
-A one-time developer setup is still required for a development/self-hosted build:
+Open:
 
-- AppID
-- AppKey
-- Key ID
+```text
+Homey → Apps → Aqara Cameras → Configure App
+```
 
-Create `env.json` from `env.json.example`. It is gitignored and must never be committed.
+Enter:
+
+- **Aqara Client ID** — the App ID from the Aqara Developer Platform
+- **Aqara Client Secret** — the App Key from the Aqara Developer Platform
+- **Aqara Key ID** — the Key ID used by the Aqara API signing algorithm
+
+The app stores these values in Homey's persistent app settings. The OAuth access/refresh token is managed by `homey-oauth2app` and is stored as an OAuth2 session, separate from the developer credentials.
+
+The Aqara user password is never stored by this app.
+
+For local development, `env.json` may still be used by a developer as a private bootstrap mechanism if needed, but the production application configuration is Homey app settings. `env.json` remains gitignored.
 
 Register the OAuth callback required by the Aqara application:
 
 ```text
 https://callback.athom.com/oauth2/callback
 ```
+
+### First-time configuration
+
+1. Install/start the Aqara Cameras app.
+2. Open **Configure App**.
+3. Enter Client ID, Client Secret and Key ID.
+4. Press **Opslaan en configureren**.
+5. Add an Aqara camera and choose **Log in with Aqara**.
+6. Authorize the app with the Aqara account.
+
+If credentials are changed after an OAuth2 configuration already exists, restart the Aqara Cameras app once so the new credentials are loaded into the OAuth2 configuration.
+
+A missing configuration must never crash the application. The app starts without credentials and reports that Aqara needs to be configured.
 
 ## Multiple cameras
 
@@ -110,13 +133,15 @@ See [`docs/ROADMAP.md`](docs/ROADMAP.md) and the dated status report in `docs/ST
 
 - Homey SDK v3
 - Node.js 18+ for development
+- Homey Pro with local app support
 - Aqara camera with a working local RTSP endpoint for local video
 - Aqara Developer Platform application for OAuth2 developer credentials
 
 ## Security
 
 - Aqara user passwords are never stored by this app.
-- `env.json` is gitignored.
+- Developer credentials are stored in Homey app settings and are never committed to GitHub.
+- `env.json` is gitignored and is development-only.
 - RTSP URLs may contain credentials; never commit real RTSP URLs with passwords.
 - Logging must not contain OAuth tokens, AppKeys, Key IDs or RTSP passwords.
 
@@ -127,6 +152,18 @@ Run the unit tests with:
 ```bash
 npm install
 npm test
+```
+
+Validate the Homey manifest with:
+
+```bash
+homey app validate
+```
+
+Run the app on a Homey Pro with:
+
+```bash
+homey app run
 ```
 
 The GitHub Actions test workflow runs the same unit tests on every push and pull request.
