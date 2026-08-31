@@ -14,14 +14,13 @@ class AqaraApp extends OAuth2App {
   static OAUTH2_DRIVERS = ['camera'];
 
   async onInit() {
-    const configured = this.configureOAuthFromSettings();
-
-    // OAuth2App initializes its configuration from the static client fields.
-    // We deliberately disable that configuration when credentials are absent,
-    // so a missing setup can never crash the entire app during startup.
     const client = this.constructor.OAUTH2_CLIENT;
+    const configured = this.configureOAuthFromSettings();
     const originalApiUrl = client.API_URL;
 
+    // OAuth2App automatically creates its default configuration when API_URL
+    // and TOKEN_URL are present. Hide API_URL only when the user has not yet
+    // configured the app, so missing credentials can never crash startup.
     if (!configured) client.API_URL = null;
 
     try {
@@ -39,7 +38,7 @@ class AqaraApp extends OAuth2App {
     this._aqaraKeyId = keyId;
 
     if (!clientId || !clientSecret || !keyId) {
-      this.log('Aqara developer credentials are not configured. Open the Aqara Cameras app settings.');
+      this.log('Aqara developer credentials are not configured. Configure the Aqara Cameras app first.');
       return false;
     }
 
@@ -47,22 +46,20 @@ class AqaraApp extends OAuth2App {
     client.CLIENT_ID = clientId;
     client.CLIENT_SECRET = clientSecret;
 
-    // OAuth2App will consume these values when it creates the OAuth2 config.
-    this.log('Aqara OAuth2 configuration loaded from Homey app settings.');
+    this.log('Aqara OAuth2 credentials loaded from Homey app settings.');
     return true;
   }
 
   async configureOAuthFromAppSettings() {
-    const configured = this.configureOAuthFromSettings();
-    if (!configured) {
-      throw new Error('Configure Aqara Client ID, Client Secret and Key ID in the app settings first.');
+    if (!this.configureOAuthFromSettings()) {
+      throw new Error('Configure Aqara Client ID, Client Secret and Key ID first.');
     }
 
     if (this.hasConfig({ configId: 'default' })) {
       return {
         configured: true,
         restartRequired: true,
-        message: 'Aqara configuration already exists. Restart the Aqara Cameras app to apply changed credentials.',
+        message: 'Aqara settings saved. Restart the Aqara Cameras app to apply changed developer credentials.',
       };
     }
 
@@ -82,12 +79,20 @@ class AqaraApp extends OAuth2App {
     return {
       configured: true,
       restartRequired: false,
-      message: 'Aqara OAuth2 configuration saved.',
+      message: 'Aqara OAuth2 configuration is ready. You can now add a camera.',
     };
   }
 
   getAqaraKeyId() {
     return this._aqaraKeyId || String(this.homey.settings.get(SETTING_KEY_ID) || '').trim();
+  }
+
+  isAqaraConfigured() {
+    return Boolean(
+      String(this.homey.settings.get(SETTING_CLIENT_ID) || '').trim()
+      && String(this.homey.settings.get(SETTING_CLIENT_SECRET) || '').trim()
+      && String(this.homey.settings.get(SETTING_KEY_ID) || '').trim(),
+    );
   }
 
   async onOAuth2Init() {
