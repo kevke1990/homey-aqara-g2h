@@ -1,7 +1,7 @@
 {
   "id": "com.aqara.cameras",
   "sdk": 3,
-  "version": "1.1.0",
+  "version": "1.2.0",
   "compatibility": ">=8.0.0",
   "platforms": ["local"],
   "name": {
@@ -9,8 +9,8 @@
     "nl": "Aqara Camera's"
   },
   "description": {
-    "en": "Aqara camera integration with OAuth2 discovery, local RTSP streaming and multi-camera support.",
-    "nl": "Aqara camera-integratie met OAuth2-discovery, lokale RTSP-streaming en ondersteuning voor meerdere camera's."
+    "en": "Aqara camera integration with account authorization, OAuth2 discovery, local RTSP streaming and multi-camera support.",
+    "nl": "Aqara camera-integratie met accountautorisatie, OAuth2-discovery, lokale RTSP-streaming en ondersteuning voor meerdere camera's."
   },
   "category": "security",
   "brandColor": "#2F6BFF",
@@ -27,6 +27,22 @@
     "configure": {
       "method": "POST",
       "path": "/configure"
+    },
+    "authCode": {
+      "method": "POST",
+      "path": "/auth-code"
+    },
+    "verifyAuthCode": {
+      "method": "POST",
+      "path": "/verify-auth-code"
+    },
+    "status": {
+      "method": "GET",
+      "path": "/status"
+    },
+    "disconnect": {
+      "method": "POST",
+      "path": "/disconnect"
     }
   }
 }
