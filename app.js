@@ -2,6 +2,7 @@
 
 const { OAuth2App } = require('homey-oauth2app');
 const AqaraOAuth2Client = require('./lib/aqara-oauth2-client');
+const AqaraAccountAuthClient = require('./lib/aqara/account-auth-client');
 
 const SETTING_CLIENT_ID = 'aqara_client_id';
 const SETTING_CLIENT_SECRET = 'aqara_client_secret';
@@ -14,55 +15,35 @@ class AqaraApp extends OAuth2App {
   static OAUTH2_DRIVERS = ['camera'];
 
   async onInit() {
+    this.aqaraAccountAuth = new AqaraAccountAuthClient({ app: this });
     const client = this.constructor.OAUTH2_CLIENT;
     const configured = this.configureOAuthFromSettings();
     const originalApiUrl = client.API_URL;
-
-    // OAuth2App automatically creates its default configuration when API_URL
-    // and TOKEN_URL are present. Hide API_URL only when the user has not yet
-    // configured the app, so missing credentials can never crash startup.
     if (!configured) client.API_URL = null;
-
     try {
       await super.onInit();
     } finally {
       client.API_URL = originalApiUrl;
     }
+    this.log(`Aqara account authorization: ${this.aqaraAccountAuth.isAuthorized() ? 'connected' : 'not connected'}`);
   }
 
   configureOAuthFromSettings() {
     const clientId = String(this.homey.settings.get(SETTING_CLIENT_ID) || '').trim();
     const clientSecret = String(this.homey.settings.get(SETTING_CLIENT_SECRET) || '').trim();
     const keyId = String(this.homey.settings.get(SETTING_KEY_ID) || '').trim();
-
-    this._aqaraKeyId = keyId;
-
-    if (!clientId || !clientSecret || !keyId) {
-      this.log('Aqara developer credentials are not configured. Configure the Aqara Cameras app first.');
-      return false;
-    }
-
+    if (!clientId || !clientSecret || !keyId) return false;
     const client = this.constructor.OAUTH2_CLIENT;
     client.CLIENT_ID = clientId;
     client.CLIENT_SECRET = clientSecret;
-
-    this.log('Aqara OAuth2 credentials loaded from Homey app settings.');
     return true;
   }
 
   async configureOAuthFromAppSettings() {
-    if (!this.configureOAuthFromSettings()) {
-      throw new Error('Configure Aqara Client ID, Client Secret and Key ID first.');
-    }
-
+    if (!this.configureOAuthFromSettings()) throw new Error('Configure Aqara Client ID, Client Secret and Key ID first.');
     if (this.hasConfig({ configId: 'default' })) {
-      return {
-        configured: true,
-        restartRequired: true,
-        message: 'Aqara settings saved. Restart the Aqara Cameras app to apply changed developer credentials.',
-      };
+      return { configured: true, restartRequired: true, message: 'Aqara developer settings saved. Restart the app to apply changed OAuth credentials.' };
     }
-
     const client = this.constructor.OAUTH2_CLIENT;
     this.setOAuth2Config({
       client,
@@ -75,24 +56,48 @@ class AqaraApp extends OAuth2App {
       scopes: client.SCOPES,
       allowMultiSession: this.constructor.OAUTH2_MULTI_SESSION,
     });
-
-    return {
-      configured: true,
-      restartRequired: false,
-      message: 'Aqara OAuth2 configuration is ready. You can now add a camera.',
-    };
+    return { configured: true, restartRequired: false, message: 'Aqara developer settings saved.' };
   }
 
   getAqaraKeyId() {
-    return this._aqaraKeyId || String(this.homey.settings.get(SETTING_KEY_ID) || '').trim();
+    return String(this.homey.settings.get(SETTING_KEY_ID) || '').trim();
   }
 
   isAqaraConfigured() {
-    return Boolean(
-      String(this.homey.settings.get(SETTING_CLIENT_ID) || '').trim()
-      && String(this.homey.settings.get(SETTING_CLIENT_SECRET) || '').trim()
-      && String(this.homey.settings.get(SETTING_KEY_ID) || '').trim(),
-    );
+    return this.configureOAuthFromSettings();
+  }
+
+  getAqaraAccountAuth() {
+    if (!this.aqaraAccountAuth) this.aqaraAccountAuth = new AqaraAccountAuthClient({ app: this });
+    return this.aqaraAccountAuth;
+  }
+
+  async requestAqaraAuthCode({ account }) {
+    return this.getAqaraAccountAuth().requestAuthCode({ account, accessTokenValidity: '30d' });
+  }
+
+  async verifyAqaraAuthCode({ account, authCode }) {
+    const result = await this.getAqaraAccountAuth().exchangeAuthCode({ account, authCode });
+    return { connected: true, openId: result.openId || null, expiresIn: Number(result.expiresIn || 0) };
+  }
+
+  getAqaraConnectionStatus() {
+    const auth = this.getAqaraAccountAuth();
+    return {
+      configured: this.isAqaraConfigured(),
+      connected: auth.isAuthorized(),
+      account: this.homey.settings.get('aqara_account') || '',
+      expiresAt: Number(this.homey.settings.get('aqara_token_expires_at') || 0),
+    };
+  }
+
+  async disconnectAqaraAccount() {
+    await this.getAqaraAccountAuth().logout();
+    return { connected: false };
+  }
+
+  async getAqaraDevices() {
+    return this.getAqaraAccountAuth().getAllDevices();
   }
 
   async onOAuth2Init() {
