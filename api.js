@@ -6,7 +6,8 @@ module.exports = {
   },
 
   async authCode({ homey, body }) {
-    return { authCodeRequested: true, account: body?.account ? await homey.app.requestAqaraAuthCode({ account: body.account }) : null };
+    await homey.app.requestAqaraAuthCode({ account: body?.account });
+    return { sent: true };
   },
 
   async verifyAuthCode({ homey, body }) {
