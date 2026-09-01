@@ -1,7 +1,7 @@
 {
   "name": "com.aqara.cameras",
-  "version": "1.1.0",
-  "description": "Aqara cameras for Homey Pro with Aqara OAuth2 discovery and local RTSP streaming.",
+  "version": "1.2.0",
+  "description": "Aqara cameras for Homey Pro with Aqara account authorization, OAuth2 discovery and local RTSP streaming.",
   "main": "app.js",
   "engines": {
     "node": ">=18"
