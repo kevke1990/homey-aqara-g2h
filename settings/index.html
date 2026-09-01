@@ -10,32 +10,57 @@
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; padding: 20px; }
     .card { max-width: 720px; margin: 0 auto; }
     h1 { font-size: 24px; margin: 0 0 8px; }
+    h2 { font-size: 17px; margin: 28px 0 8px; }
     p { line-height: 1.5; opacity: .8; }
     label { display: block; font-weight: 600; margin: 18px 0 6px; }
     input { box-sizing: border-box; width: 100%; padding: 11px 12px; border: 1px solid rgba(127,127,127,.45); border-radius: 8px; background: transparent; color: inherit; }
-    button { margin-top: 22px; width: 100%; padding: 12px 16px; border: 0; border-radius: 8px; font-weight: 700; cursor: pointer; }
+    button { margin-top: 14px; width: 100%; padding: 12px 16px; border: 0; border-radius: 8px; font-weight: 700; cursor: pointer; }
+    button.secondary { opacity: .8; }
     #status { margin-top: 14px; padding: 10px 12px; border-radius: 8px; display: none; }
     #status.error { display: block; background: rgba(220, 60, 60, .15); }
     #status.ok { display: block; background: rgba(50, 170, 90, .15); }
+    #connection { padding: 12px; border-radius: 8px; background: rgba(127,127,127,.10); }
     .hint { font-size: 13px; opacity: .7; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
   <main class="card">
     <h1>Aqara Cameras</h1>
-    <p>Vul hier de Aqara Developer gegevens in. Deze gegevens worden lokaal in Homey opgeslagen en worden niet naar GitHub gestuurd.</p>
+    <p>Configureer eerst je Aqara Developer-project. Daarna kun je je eigen Aqara-account veilig koppelen zonder je Aqara-wachtwoord aan deze app te geven.</p>
 
+    <h2>1. Aqara Developer</h2>
     <label for="clientId">Aqara Client ID</label>
     <input id="clientId" type="text" autocomplete="off" spellcheck="false">
 
     <label for="clientSecret">Aqara Client Secret</label>
-    <input id="clientSecret" type="password" autocomplete="off" spellcheck="false">
+    <input id="clientSecret" type="password" autocomplete="new-password" spellcheck="false">
 
     <label for="keyId">Aqara Key ID</label>
     <input id="keyId" type="text" autocomplete="off" spellcheck="false">
-    <div class="hint">Deze Key ID wordt gebruikt voor de Aqara API-signature.</div>
+    <div class="hint">Deze drie waarden horen bij je Aqara Developer-project.</div>
+    <button id="save" type="button">Developergegevens opslaan</button>
 
-    <button id="save" type="button">Opslaan en configureren</button>
+    <h2>2. Aqara-account koppelen</h2>
+    <div id="connection">Status controleren…</div>
+
+    <section id="connectSection">
+      <label for="account">Aqara e-mail of telefoonnummer</label>
+      <input id="account" type="text" autocomplete="username" spellcheck="false">
+      <div class="hint">Aqara stuurt een verificatiecode per e-mail of SMS. Je Aqara-wachtwoord wordt niet opgeslagen.</div>
+      <button id="sendCode" type="button">Verificatiecode aanvragen</button>
+
+      <div id="verifySection" class="hidden">
+        <label for="authCode">Verificatiecode</label>
+        <input id="authCode" type="text" inputmode="numeric" autocomplete="one-time-code">
+        <button id="verify" type="button">Aqara-account koppelen</button>
+      </div>
+    </section>
+
+    <section id="connectedSection" class="hidden">
+      <button id="disconnect" class="secondary" type="button">Aqara-account ontkoppelen</button>
+    </section>
+
     <div id="status" role="status"></div>
   </main>
 
@@ -43,56 +68,122 @@
     function onHomeyReady(Homey) {
       Homey.ready();
 
-      const clientId = document.getElementById('clientId');
-      const clientSecret = document.getElementById('clientSecret');
-      const keyId = document.getElementById('keyId');
-      const save = document.getElementById('save');
-      const status = document.getElementById('status');
-
+      const $ = id => document.getElementById(id);
       const showStatus = (message, ok) => {
-        status.textContent = message;
-        status.className = ok ? 'ok' : 'error';
+        $('status').textContent = message;
+        $('status').className = ok ? 'ok' : 'error';
       };
-
       const setSetting = (key, value) => new Promise((resolve, reject) => {
         Homey.set(key, value, error => error ? reject(error) : resolve());
       });
+      const getSetting = key => new Promise((resolve, reject) => {
+        Homey.get(key, (error, value) => error ? reject(error) : resolve(value));
+      });
+      const api = (method, path, body) => new Promise((resolve, reject) => {
+        Homey.api(method, path, body || {}, (error, result) => error ? reject(error) : resolve(result));
+      });
+
+      async function refreshStatus() {
+        try {
+          const status = await api('GET', '/status');
+          if (status.connected) {
+            $('connection').textContent = `Verbonden met Aqara${status.account ? ` als ${status.account}` : ''}.`;
+            $('connectSection').classList.add('hidden');
+            $('connectedSection').classList.remove('hidden');
+          } else if (status.configured) {
+            $('connection').textContent = 'Developergegevens zijn ingesteld, maar er is nog geen Aqara-account gekoppeld.';
+            $('connectSection').classList.remove('hidden');
+            $('connectedSection').classList.add('hidden');
+          } else {
+            $('connection').textContent = 'Vul eerst de Aqara Developergegevens in.';
+            $('connectSection').classList.remove('hidden');
+            $('connectedSection').classList.add('hidden');
+          }
+        } catch (error) {
+          $('connection').textContent = 'Status kon niet worden opgehaald.';
+        }
+      }
 
       Promise.all([
-        new Promise((resolve, reject) => Homey.get('aqara_client_id', (err, value) => err ? reject(err) : resolve(value))),
-        new Promise((resolve, reject) => Homey.get('aqara_client_secret', (err, value) => err ? reject(err) : resolve(value))),
-        new Promise((resolve, reject) => Homey.get('aqara_key_id', (err, value) => err ? reject(err) : resolve(value))),
-      ]).then(([id, secret, key]) => {
-        clientId.value = id || '';
-        clientSecret.value = secret || '';
-        keyId.value = key || '';
+        getSetting('aqara_client_id'),
+        getSetting('aqara_client_secret'),
+        getSetting('aqara_key_id'),
+        getSetting('aqara_account'),
+      ]).then(([id, secret, key, account]) => {
+        $('clientId').value = id || '';
+        $('clientSecret').value = secret || '';
+        $('keyId').value = key || '';
+        $('account').value = account || '';
       }).catch(() => {});
 
-      save.addEventListener('click', async () => {
-        const id = clientId.value.trim();
-        const secret = clientSecret.value.trim();
-        const key = keyId.value.trim();
-
-        if (!id || !secret || !key) {
-          showStatus('Vul Client ID, Client Secret en Key ID in.', false);
-          return;
-        }
-
-        save.disabled = true;
+      $('save').addEventListener('click', async () => {
+        const id = $('clientId').value.trim();
+        const secret = $('clientSecret').value.trim();
+        const key = $('keyId').value.trim();
+        if (!id || !secret || !key) return showStatus('Vul Client ID, Client Secret en Key ID in.', false);
+        $('save').disabled = true;
         try {
           await setSetting('aqara_client_id', id);
           await setSetting('aqara_client_secret', secret);
           await setSetting('aqara_key_id', key);
-
-          const result = await Homey.api('POST', '/configure', {});
-          showStatus(result.message || 'Aqara configuratie opgeslagen.', true);
+          const result = await api('POST', '/configure');
+          showStatus(result.message || 'Developergegevens opgeslagen.', true);
+          await refreshStatus();
         } catch (error) {
-          console.error(error);
-          showStatus(error.message || 'Opslaan/configureren mislukt.', false);
+          showStatus(error.message || 'Opslaan mislukt.', false);
         } finally {
-          save.disabled = false;
+          $('save').disabled = false;
         }
       });
+
+      $('sendCode').addEventListener('click', async () => {
+        const account = $('account').value.trim();
+        if (!account) return showStatus('Vul je Aqara e-mail of telefoonnummer in.', false);
+        $('sendCode').disabled = true;
+        try {
+          await setSetting('aqara_account', account);
+          await api('POST', '/auth-code', { account });
+          $('verifySection').classList.remove('hidden');
+          showStatus('De Aqara-verificatiecode is aangevraagd. Controleer je e-mail of SMS.', true);
+          $('authCode').focus();
+        } catch (error) {
+          showStatus(error.message || 'Verificatiecode aanvragen mislukt.', false);
+        } finally {
+          $('sendCode').disabled = false;
+        }
+      });
+
+      $('verify').addEventListener('click', async () => {
+        const account = $('account').value.trim();
+        const authCode = $('authCode').value.trim();
+        if (!account || !authCode) return showStatus('Vul account en verificatiecode in.', false);
+        $('verify').disabled = true;
+        try {
+          await api('POST', '/verify-auth-code', { account, authCode });
+          showStatus('Aqara-account succesvol gekoppeld.', true);
+          $('authCode').value = '';
+          await refreshStatus();
+        } catch (error) {
+          showStatus(error.message || 'Aqara-account koppelen mislukt.', false);
+        } finally {
+          $('verify').disabled = false;
+        }
+      });
+
+      $('disconnect').addEventListener('click', async () => {
+        $('disconnect').disabled = true;
+        try {
+          await api('POST', '/disconnect');
+          showStatus('Aqara-account ontkoppeld.', true);
+          await refreshStatus();
+        } catch (error) {
+          showStatus(error.message || 'Ontkoppelen mislukt.', false);
+        } finally {
+          $('disconnect').disabled = false;
+        }
+      });
+
+      refreshStatus();
     }
   </script>
 </body>
