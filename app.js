@@ -15,17 +15,29 @@ class AqaraApp extends OAuth2App {
   static OAUTH2_DRIVERS = ['camera'];
 
   async onInit() {
+    await this.migrateLegacyCredentials();
     this.aqaraAccountAuth = new AqaraAccountAuthClient({ app: this });
     // Account Authorization is the primary path and must work without OAuth credentials.
-    // OAuth2 is configured only when its own credentials are explicitly present.
+    // OAuth2 is optional and is configured only when its own credentials are explicitly present.
     this.configureOAuthFromSettings();
     try {
       await super.onInit();
     } catch (error) {
-      // Do not let an incomplete optional OAuth configuration prevent the app from starting.
+      // An incomplete optional OAuth configuration must never prevent Account Authorization from starting.
       this.error('OAuth2 initialization failed; Aqara Account Authorization remains available.', error);
     }
     this.log(`Aqara account authorization: ${this.aqaraAccountAuth.isAuthorized() ? 'connected' : 'not connected'}`);
+  }
+
+  async migrateLegacyCredentials() {
+    const appId = String(this.homey.settings.get(SETTING_APP_ID) || '').trim();
+    const appKey = String(this.homey.settings.get(SETTING_APP_KEY) || '').trim();
+    const legacyAppId = String(this.homey.settings.get('aqara_client_id') || '').trim();
+    const legacySecret = String(this.homey.settings.get('aqara_client_secret') || '').trim();
+
+    if (!appId && legacyAppId) await this.homey.settings.set(SETTING_APP_ID, legacyAppId);
+    // Previous versions called the Aqara App Key a Client Secret. Migrate it once, but never use it as OAuth secret.
+    if (!appKey && legacySecret) await this.homey.settings.set(SETTING_APP_KEY, legacySecret);
   }
 
   configureOAuthFromSettings() {
@@ -39,7 +51,6 @@ class AqaraApp extends OAuth2App {
   }
 
   async configureOAuthFromAppSettings() {
-    // This endpoint configures the non-OAuth Aqara API credentials only.
     const appId = String(this.homey.settings.get(SETTING_APP_ID) || '').trim();
     const appKey = String(this.homey.settings.get(SETTING_APP_KEY) || '').trim();
     const keyId = String(this.homey.settings.get(SETTING_KEY_ID) || '').trim();
