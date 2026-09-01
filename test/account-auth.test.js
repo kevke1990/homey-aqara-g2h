@@ -6,8 +6,8 @@ const AqaraAccountAuthClient = require('../lib/aqara/account-auth-client');
 
 function makeClient() {
   const values = new Map([
-    ['aqara_client_id', 'app-id'],
-    ['aqara_client_secret', 'app-secret'],
+    ['aqara_app_id', 'app-id'],
+    ['aqara_app_key', 'app-key'],
     ['aqara_key_id', 'key-id'],
   ]);
   const settings = {
@@ -73,8 +73,10 @@ test('Aqara account discovery sends the documented query.device.info payload', a
     const body = JSON.parse(request.options.body);
     assert.equal(body.intent, 'query.device.info');
     assert.deepEqual(body.data, { dids: [], positionId: '', pageNum: 1, pageSize: 50 });
-    assert.equal(request.options.headers.Appid, values.get('aqara_client_id'));
+    assert.equal(request.options.headers.Appid, values.get('aqara_app_id'));
     assert.equal(request.options.headers.Keyid, values.get('aqara_key_id'));
+    assert.equal(typeof request.options.headers.Sign, 'string');
+    assert.ok(request.options.headers.Sign.length > 0);
   } finally {
     global.fetch = originalFetch;
   }
