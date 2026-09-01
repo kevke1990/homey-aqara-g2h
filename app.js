@@ -4,8 +4,8 @@ const { OAuth2App } = require('homey-oauth2app');
 const AqaraOAuth2Client = require('./lib/aqara-oauth2-client');
 const AqaraAccountAuthClient = require('./lib/aqara/account-auth-client');
 
-const SETTING_CLIENT_ID = 'aqara_client_id';
-const SETTING_CLIENT_SECRET = 'aqara_client_secret';
+const SETTING_APP_ID = 'aqara_app_id';
+const SETTING_APP_KEY = 'aqara_app_key';
 const SETTING_KEY_ID = 'aqara_key_id';
 
 class AqaraApp extends OAuth2App {
@@ -16,47 +16,41 @@ class AqaraApp extends OAuth2App {
 
   async onInit() {
     this.aqaraAccountAuth = new AqaraAccountAuthClient({ app: this });
-    const client = this.constructor.OAUTH2_CLIENT;
-    const configured = this.configureOAuthFromSettings();
-    const originalApiUrl = client.API_URL;
-    if (!configured) client.API_URL = null;
+    // Account Authorization is the primary path and must work without OAuth credentials.
+    // OAuth2 is configured only when its own credentials are explicitly present.
+    this.configureOAuthFromSettings();
     try {
       await super.onInit();
-    } finally {
-      client.API_URL = originalApiUrl;
+    } catch (error) {
+      // Do not let an incomplete optional OAuth configuration prevent the app from starting.
+      this.error('OAuth2 initialization failed; Aqara Account Authorization remains available.', error);
     }
     this.log(`Aqara account authorization: ${this.aqaraAccountAuth.isAuthorized() ? 'connected' : 'not connected'}`);
   }
 
   configureOAuthFromSettings() {
-    const clientId = String(this.homey.settings.get(SETTING_CLIENT_ID) || '').trim();
-    const clientSecret = String(this.homey.settings.get(SETTING_CLIENT_SECRET) || '').trim();
-    const keyId = String(this.homey.settings.get(SETTING_KEY_ID) || '').trim();
-    if (!clientId || !clientSecret || !keyId) return false;
+    const clientId = String(this.homey.settings.get(SETTING_APP_ID) || '').trim();
+    const clientSecret = String(this.homey.settings.get('aqara_oauth_client_secret') || '').trim();
+    if (!clientId) return false;
     const client = this.constructor.OAUTH2_CLIENT;
     client.CLIENT_ID = clientId;
-    client.CLIENT_SECRET = clientSecret;
-    return true;
+    if (clientSecret) client.CLIENT_SECRET = clientSecret;
+    return Boolean(clientSecret);
   }
 
   async configureOAuthFromAppSettings() {
-    if (!this.configureOAuthFromSettings()) throw new Error('Configure Aqara Client ID, Client Secret and Key ID first.');
-    if (this.hasConfig({ configId: 'default' })) {
-      return { configured: true, restartRequired: true, message: 'Aqara developer settings saved. Restart the app to apply changed OAuth credentials.' };
+    // This endpoint configures the non-OAuth Aqara API credentials only.
+    const appId = String(this.homey.settings.get(SETTING_APP_ID) || '').trim();
+    const appKey = String(this.homey.settings.get(SETTING_APP_KEY) || '').trim();
+    const keyId = String(this.homey.settings.get(SETTING_KEY_ID) || '').trim();
+    if (!appId || !appKey || !keyId) {
+      throw new Error('Configure Aqara App ID, App Key and Key ID first. OAuth Client Secret is not required for Aqara Account Authorization.');
     }
-    const client = this.constructor.OAUTH2_CLIENT;
-    this.setOAuth2Config({
-      client,
-      clientId: client.CLIENT_ID,
-      clientSecret: client.CLIENT_SECRET,
-      apiUrl: client.API_URL,
-      tokenUrl: client.TOKEN_URL,
-      authorizationUrl: client.AUTHORIZATION_URL,
-      redirectUrl: client.REDIRECT_URL,
-      scopes: client.SCOPES,
-      allowMultiSession: this.constructor.OAUTH2_MULTI_SESSION,
-    });
-    return { configured: true, restartRequired: false, message: 'Aqara developer settings saved.' };
+    return {
+      configured: true,
+      restartRequired: false,
+      message: 'Aqara Account Authorization credentials saved. OAuth Client Secret is not required for this authorization method.',
+    };
   }
 
   getAqaraKeyId() {
@@ -64,7 +58,11 @@ class AqaraApp extends OAuth2App {
   }
 
   isAqaraConfigured() {
-    return this.configureOAuthFromSettings();
+    return Boolean(
+      String(this.homey.settings.get(SETTING_APP_ID) || '').trim()
+      && String(this.homey.settings.get(SETTING_APP_KEY) || '').trim()
+      && String(this.homey.settings.get(SETTING_KEY_ID) || '').trim(),
+    );
   }
 
   getAqaraAccountAuth() {
@@ -106,8 +104,8 @@ class AqaraApp extends OAuth2App {
 }
 
 AqaraApp.SETTINGS = {
-  CLIENT_ID: SETTING_CLIENT_ID,
-  CLIENT_SECRET: SETTING_CLIENT_SECRET,
+  APP_ID: SETTING_APP_ID,
+  APP_KEY: SETTING_APP_KEY,
   KEY_ID: SETTING_KEY_ID,
 };
 
